@@ -2,12 +2,13 @@
 
 import java.io.*;
 import java.net.ConnectException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Objects;
 
 public class Client {
-    static InetAddress ip_addr = null;
+    static Inet4Address ip_addr = null;
     static int port_number = 0;
 
     static Socket socket;
@@ -16,7 +17,7 @@ public class Client {
 
     static long timeLimit = 10; // in seconds
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         try {
             read_connection_configuration();
             System.out.println(ip_addr + " " + port_number);
@@ -41,7 +42,7 @@ public class Client {
     public static void read_connection_configuration() throws IOException {
         File config = new File("src/ConnectionConfiguration.txt");
         BufferedReader reader = new BufferedReader(new FileReader(config));
-        ip_addr = InetAddress.getByName(reader.readLine());
+        ip_addr = (Inet4Address) Inet4Address.getByName(reader.readLine());
         port_number = Integer.parseInt(reader.readLine());
         reader.close();
     }
@@ -54,7 +55,7 @@ public class Client {
         try {
 
             socket = new Socket(ip_addr, port_number);
-            server_writer = new PrintWriter(socket.getOutputStream());
+            server_writer = new PrintWriter(socket.getOutputStream(), true);
             server_reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (ConnectException ex) {
             System.out.println(ASCII.RED + ex.getMessage() + ASCII.RESET);
