@@ -47,6 +47,7 @@ public class ClientHandler implements Runnable {
 
             Server.writeResultToFile(clientId, score);
             sendMessage("Test zakonczony");
+            sendMessage("" + score);
 
             clientSocket.close();
             System.out.println("Zakonczono polaczenie");

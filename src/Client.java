@@ -89,7 +89,6 @@ public class Client {
         while (System.currentTimeMillis() < endTime) {
             if (System.in.available() > 0) { // Non-blocking reading
                 input = reader.readLine();
-                System.out.println(input);
                 break;
             } else {
                 Thread.sleep(100);
@@ -108,6 +107,7 @@ public class Client {
     public static void startQuiz() throws IOException, InterruptedException {
         if (socket != null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("Wpisz imie i nazwisko:");
             String name = reader.readLine();
             sendMessage(name);
 
@@ -117,22 +117,19 @@ public class Client {
 
 
             do {
-                System.out.println(ASCII.BLUE + "read message:" + ASCII.RESET);
                 message = readMessage();
                 System.out.println(message);
                 if (message.equals("Test zakonczony")) break;
 
-
-                System.out.println(ASCII.BLUE + "read input:" + ASCII.RESET);
                 choice = readChoice();
-
-                System.out.println(ASCII.BLUE + "send message" + ASCII.RESET);
                 sendMessage(choice);
+
                 message = readMessage();
                 System.out.println(message);
 
-
             } while (true);
+            message = readMessage();
+            System.out.println("Wynik:" + message);
         }
     }
 }
