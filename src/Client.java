@@ -15,7 +15,7 @@ public class Client {
     static BufferedReader server_reader;
     static PrintWriter server_writer;
 
-    static long timeLimit = 10; // in seconds
+    static long timeLimit = 60; // in seconds
 
     public static void main(String[] args) {
         try {
@@ -40,7 +40,7 @@ public class Client {
     }
 
     public static void read_connection_configuration() throws IOException {
-        File config = new File("ConnectionConfiguration.txt");
+        File config = new File("src/ConnectionConfiguration.txt");
         BufferedReader reader = new BufferedReader(new FileReader(config));
         ip_addr = (Inet4Address) Inet4Address.getByName(reader.readLine());
         port_number = Integer.parseInt(reader.readLine());
@@ -89,6 +89,7 @@ public class Client {
         while (System.currentTimeMillis() < endTime) {
             if (System.in.available() > 0) { // Non-blocking reading
                 input = reader.readLine();
+                System.out.println(input);
                 break;
             } else {
                 Thread.sleep(100);
@@ -106,6 +107,9 @@ public class Client {
 
     public static void startQuiz() throws IOException, InterruptedException {
         if (socket != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            String name = reader.readLine();
+            sendMessage(name);
 
             System.out.println(ASCII.CYAN + "(You have " + timeLimit + " seconds)" + ASCII.RESET);
             String message;
@@ -113,15 +117,22 @@ public class Client {
 
 
             do {
+                System.out.println(ASCII.BLUE + "read message:" + ASCII.RESET);
+                message = readMessage();
+                System.out.println(message);
+                if (message.equals("Test zakonczony")) break;
+
+
+                System.out.println(ASCII.BLUE + "read input:" + ASCII.RESET);
+                choice = readChoice();
+
+                System.out.println(ASCII.BLUE + "send message" + ASCII.RESET);
+                sendMessage(choice);
                 message = readMessage();
                 System.out.println(message);
 
-                choice = readChoice();
 
-                sendMessage(choice);
-
-
-            } while (!message.equals("/session::end"));
+            } while (true);
         }
     }
 }

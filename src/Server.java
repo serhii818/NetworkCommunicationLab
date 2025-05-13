@@ -63,7 +63,7 @@ public class Server {
     }
     
     public static void writeResultToFile(String clientId, int score) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("wyniki.txt", true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/wyniki.txt", true))) {
             writer.write(clientId + ": " + score + " punktów");
             writer.newLine();
         } catch (IOException e) {
@@ -72,7 +72,7 @@ public class Server {
     }
 
     public static void writeResponsesToFile(String clientId, String answer) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("bazaOdpowiedzi.txt", true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/bazaOdpowiedzi.txt", true))) {
             writer.write(clientId + ": " + answer);
             writer.newLine();
         } catch (IOException e) {

@@ -14,7 +14,6 @@ public class ClientHandler implements Runnable {
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
         this.questions = new ArrayList<>();
-        this.clientId = "1";
     }
 
     @Override
@@ -23,8 +22,9 @@ public class ClientHandler implements Runnable {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             int score = 0;
-            loadQuestionsFromFile("bazaPytan.txt");
+            loadQuestionsFromFile("src/bazaPytan.txt");
 
+            clientId = in.readLine();
 
             for (String[] q : questions) {
                 String question = q[0];
