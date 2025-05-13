@@ -40,7 +40,7 @@ public class Client {
     }
 
     public static void read_connection_configuration() throws IOException {
-        File config = new File("src/ConnectionConfiguration.txt");
+        File config = new File("ConnectionConfiguration.txt");
         BufferedReader reader = new BufferedReader(new FileReader(config));
         ip_addr = (Inet4Address) Inet4Address.getByName(reader.readLine());
         port_number = Integer.parseInt(reader.readLine());
