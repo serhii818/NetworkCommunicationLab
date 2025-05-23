@@ -19,11 +19,14 @@ public class Server {
     private static Connection database = null;
 
     public static void main(String[] args) {
-    	
-
         System.out.println("Uruchamianie serwera");
-        chackDriver();
-        connectToDB();
+
+        // database initialization
+        if (chackDriver()) {
+            connectToDB();
+        }
+
+
 
         try (ServerSocket serverSocket = new ServerSocket(port_number)) {
             System.out.println("Serwer nasluchuje na porcie " + port_number);
@@ -93,7 +96,7 @@ public class Server {
             System.out.println(ASCII.GREEN + "MYSQL DATABASE DRIVER OK" + ASCII.RESET);
             return true;
         } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
+            System.out.println(ASCII.RED + "Database driver ERROR: " + ex.getMessage() + ASCII.RESET);
             return false;
         }
     }
@@ -103,7 +106,7 @@ public class Server {
             createDBIfNotExists();
             database = DriverManager.getConnection(database_server + database_name, "root", "");
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            System.out.println(ASCII.RED + "database connection error: " + ex.getMessage() + ASCII.RESET);
         }
     }
 
@@ -118,6 +121,7 @@ public class Server {
 
             if (!rs.next()) {
                 createDB(conn);
+                createTables(conn);
 
                 System.out.println(ASCII.YELLOW + "Database created, database name: " + ASCII.BLUE + database_name + ASCII.RESET);
             } else {
@@ -129,7 +133,7 @@ public class Server {
             conn.close();
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            System.out.println(ASCII.RED + "database error: " + ex.getMessage() + ASCII.RESET);
         }
     }
 
@@ -138,5 +142,48 @@ public class Server {
         Statement stmt = conn.createStatement();
         stmt.executeUpdate(query);
         stmt.close();
+    }
+
+    public static void createTables(Connection conn) throws SQLException {
+        String query1 = "USE baza1;";
+        String query2 = "CREATE TABLE pytanie (\n" +
+                "    nrPytania INT(4) PRIMARY KEY,\n" +
+                "    tresc TEXT NOT NULL,\n" +
+                "    opcje TEXT NOT NULL,\n" +
+                "    odpowiedz CHAR(1) NOT NULL\n" +
+                ");";
+        String query3 = "CREATE TABLE odpowiedz_studenta (\n" +
+                "    imie VARCHAR(20),\n" +
+                "    nrPytania INT(4),\n" +
+                "    odpowiedz CHAR(1),\n" +
+                "    PRIMARY KEY(imie, nrPytania),\n" +
+                "    FOREIGN KEY(nrPytania) REFERENCES pytanie(nrPytania)\n" +
+                ");";
+        String query4 = "CREATE TABLE wynik (\n" +
+                "    idWyniku INT(4) PRIMARY KEY,\n" +
+                "    imie VARCHAR(20) NOT NULL,\n" +
+                "    punkty INT(4) NOT NULL\n" +
+                ");";
+
+        Statement stmt = conn.createStatement();
+        stmt.executeUpdate(query1);
+        stmt.executeUpdate(query2);
+        stmt.executeUpdate(query3);
+        stmt.executeUpdate(query4);
+        stmt.close();
+    }
+
+    public static void deleteDB(String database_name2) {
+        try {
+            Connection conn = DriverManager.getConnection(database_server, "root", "");
+            String query = "DROP DATABASE " + database_name2;
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(query);
+            System.out.println(ASCII.YELLOW + "database " + ASCII.BLUE + database_name2 + ASCII.YELLOW + " was deleted" + ASCII.RESET);
+            stmt.close();
+            conn.close();
+        } catch (SQLException ex) {
+            System.out.println(ASCII.RED + "database error: " + ex.getMessage() + ASCII.RESET);
+        }
     }
 }
