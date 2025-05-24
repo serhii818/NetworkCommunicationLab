@@ -1,5 +1,11 @@
 import java.io.*;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +14,7 @@ public class ClientHandler implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
 
-    private List<String[]> questions;
+    private List<Question> questions;
     private String clientId;
 
     public ClientHandler(Socket socket) {
@@ -22,30 +28,28 @@ public class ClientHandler implements Runnable {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             int score = 0;
-            loadQuestionsFromFile("src/bazaPytan.txt");
+            loadQuestionsFromDB();
 
             clientId = in.readLine();
 
-            for (String[] q : questions) {
-                String question = q[0];
-                String correctAnswer = q[1];
-
-                sendMessage(question);
+            for (Question q : questions) {
+                sendMessage(q.tresc);
+                sendMessage(q.opcje);
                 String userAnswer = in.readLine();
 
                 System.out.println("Odpowiedz: " + userAnswer);
-                Server.writeResponsesToFile(clientId, userAnswer);
+                Server.writeResponsesToDB(clientId, q.nrPytania, userAnswer);
 
 
-                if (userAnswer == null || !userAnswer.trim().equalsIgnoreCase(correctAnswer)) {
-                    sendMessage("Zle, poprawna opdowiedz: " + correctAnswer);
+                if (userAnswer == null || !userAnswer.trim().equalsIgnoreCase(q.odpowiedz)) {
+                    sendMessage("Zle, poprawna opdowiedz: " + q.odpowiedz);
                 } else {
                 	score++;
                     sendMessage("Dobrze");
                 }
             }
 
-            Server.writeResultToFile(clientId, score);
+            Server.writeResultToDB(clientId, score, Date());
             sendMessage("Test zakonczony");
             sendMessage("" + score);
 
@@ -59,20 +63,43 @@ public class ClientHandler implements Runnable {
         }
     }
     
-    private void loadQuestionsFromFile(String filePath) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String question = line;
-                String correctAnswer = reader.readLine();
+    private void loadQuestionsFromDB() {
+        String query = "SELECT nrPytania, tresc, odpowiedz FROM pytanie";
+        try (Statement stmt = Server.getConnection().createStatement();
+             ResultSet r = stmt.executeQuery(query)) {
 
-                if (question != null && correctAnswer != null) {
-                    questions.add(new String[]{question, correctAnswer});
-                }
+            while (r.next()) {
+                int nr = r.getInt("nrPytania");
+                String tresc = r.getString("tresc");
+                String opcje = r.getString("opcje");
+                String odp = r.getString("odpowiedz");
+                questions.add(new Question(nr, tresc, opcje, odp));
             }
-        } catch (IOException e) {
-            System.err.println("Blad odczytu" + e.getMessage());
+
+        } catch (SQLException e) {
+            System.err.println("Błąd pobierania pytań z DB: " + e.getMessage());
         }
+    }
+    
+    private static class Question {
+        int nrPytania;
+        String tresc;
+        String opcje;
+        String odpowiedz;
+
+        Question(int nr, String tresc, String opcje, String odpowiedz) {
+            this.nrPytania = nr;
+            this.tresc = tresc;
+            this.opcje = opcje;
+            this.odpowiedz = odpowiedz;
+        }
+    }
+    
+    public static int Date() {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String formattedDateTime = now.format(f);
+        return Integer.parseInt(formattedDateTime.substring(0, 9));
     }
 
     private void sendMessage(String msg) {

@@ -72,23 +72,33 @@ public class Server {
         }
     }
     
-    public static void writeResultToFile(String clientId, int score) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/wyniki.txt", true))) {
-            writer.write(clientId + ": " + score + " punktów");
-            writer.newLine();
-        } catch (IOException e) {
+    public static void writeResultToDB(String clientId, int score, int idWyniku) {
+        String query = "INSERT INTO wynik (idWyniku, imie, punkty) VALUES (?, ?, ?)";
+        try (PreparedStatement Stmt = database.prepareStatement(query)) {
+        	Stmt.setInt(1, idWyniku);
+            Stmt.setString(2, clientId);
+            Stmt.setInt(3, score);
+            Stmt.executeUpdate();
+            System.out.println("Wynik score zapisany do bazy: " + clientId);
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void writeResponsesToFile(String clientId, String answer) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/bazaOdpowiedzi.txt", true))) {
-            writer.write(clientId + ": " + answer);
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static void writeResponsesToDB(String clientId, int nrPytania, String odpowiedz) {
+        String query = "INSERT INTO odpowiedz_studenta (imie, nrPytania, odpowiedz) VALUES (?, ?, ?)";
+
+        try (PreparedStatement Stmt = database.prepareStatement(query)) {
+        	Stmt.setString(1, clientId);
+        	Stmt.setInt(2, nrPytania);
+        	Stmt.setString(3, odpowiedz);
+        	Stmt.executeUpdate();
+            System.out.println("Odpowiedz zapisana do bazy");
+        } catch (SQLException e) {
+            System.err.println("Blad zapisu odpowiedzi " + e.getMessage());
         }
     }
+
 
     public static boolean chackDriver() {
         try {
@@ -186,4 +196,10 @@ public class Server {
             System.out.println(ASCII.RED + "database error: " + ex.getMessage() + ASCII.RESET);
         }
     }
+    
+    public static Connection getConnection() {
+        return database;
+    }
+    
+
 }
